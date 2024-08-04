@@ -1,12 +1,11 @@
-
-
+#[warn(dead_code)]
 use speedy2d::{
     color::Color,
     font::{Font, TextLayout, TextOptions},
     window::WindowHandler,
     Graphics2D, Window,
 };
-use std::{f32, io::stdin};
+use std::{f32, fmt::format, io::stdin};
 
 use vector::Vector;
 
@@ -25,14 +24,17 @@ fn main() {
     let window = Window::new_centered("Pendulum", (1000, 600)).unwrap();
     let my_window_handler = |x: f32| -> MyWindowHandler {
         let mut wh = MyWindowHandler { pendulos: vec![] };
-        let counter = 900f32 / x;
-
-        for i in 0..x as i32 {
-            wh.pendulos.push(Pendulum::new(
-                counter + ((i as f32) * counter),
-                0f32,
-                200f32,
-            ))
+        let counter = 950f32 / x;
+        if x < 2f32 {
+            wh.pendulos.push(Pendulum::new(500f32, 0f32, 200f32));
+        } else {
+            for i in 0..x as i32 {
+                wh.pendulos.push(Pendulum::new(
+                    counter + ((i as f32) * counter),
+                    0f32,
+                    200f32,
+                ))
+            }
         }
 
         wh
@@ -51,13 +53,21 @@ impl WindowHandler for MyWindowHandler {
         helper: &mut speedy2d::window::WindowHelper<()>,
         graphics: &mut Graphics2D,
     ) {
-        graphics.clear_screen(Color::WHITE);
+        graphics.clear_screen(Color::TRANSPARENT);
         let bytes = include_bytes!("assets/fonts/noto-sans/NotoSans-Regular.ttf");
         let font = Font::new(bytes).unwrap();
-        let data1 = &self.pendulos[1].angular_aceleration.to_string();
-        println!("{:.2}",&data1);
 
-        let block = font.layout_text(data1, 19f32, TextOptions::new());
+        for text in &self.pendulos {
+            let data1 = text.position.x.to_string();
+            let data2 = text.position.y.to_string();
+            let text_position = format(format_args!("x:{}\ny{}", data1, data2));
+            let block = font.layout_text(&text_position, 19f32, TextOptions::new());
+            graphics.draw_text(
+                (text.position.x - 30f32, text.position.y + 30f32),
+                Color::from_rgb(205f32, 47f32, 210f32),
+                &block,
+            );
+        }
 
         for i in &mut self.pendulos {
             i.draaw(graphics);
@@ -69,13 +79,7 @@ impl WindowHandler for MyWindowHandler {
         //self.pendulos[0].draaw(graphics);
         //self.pendulos[1].draaw(graphics);
 
-        for i in &mut self.pendulos {
-            graphics.draw_text(
-                (i.position.x - 30f32, i.position.y + 30f32),
-                Color::BLACK,
-                &block,
-            );
-        }
+        for i in &mut self.pendulos {}
 
         helper.request_redraw();
     }
@@ -104,13 +108,14 @@ impl Pendulum {
             angle: 1.0,
             angular_velocity: 0.0,
             angular_aceleration: 0.0,
-            r: r,
+            r,
             m: 0.5,
             g: 0.5,
         }
     }
+
     fn update(&mut self) {
-        self.angular_aceleration += -0.5f32 * self.angle.sin() * self.g / self.r;
+        self.angular_aceleration += -1f32 * self.angle.sin() * self.g / self.r;
 
         self.angular_velocity += self.angular_aceleration;
 
@@ -127,10 +132,10 @@ impl Pendulum {
             (self.origim.x, self.origim.y),
             (self.position.x, self.position.y),
             3.0,
-            Color::BLACK,
+            Color::RED,
         );
 
-        graphics.draw_circle((self.position.x, self.position.y), 30.0, Color::BLACK);
+        graphics.draw_circle((self.position.x, self.position.y), 30.0, Color::BLUE);
     }
 }
 
