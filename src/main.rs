@@ -26,13 +26,14 @@ fn main() {
         let mut wh = MyWindowHandler { pendulos: vec![] };
         let counter = 950f32 / x;
         if x < 2f32 {
-            wh.pendulos.push(Pendulum::new(500f32, 0f32, 200f32));
+            wh.pendulos.push(Pendulum::new(500f32, 0f32, 200f32, 1));
         } else {
             for i in 0..x as i32 {
                 wh.pendulos.push(Pendulum::new(
                     counter + ((i as f32) * counter),
                     0f32,
                     200f32,
+                    i as u8,
                 ))
             }
         }
@@ -57,10 +58,11 @@ impl WindowHandler for MyWindowHandler {
         let bytes = include_bytes!("assets/fonts/noto-sans/NotoSans-Regular.ttf");
         let font = Font::new(bytes).unwrap();
 
+        //Escreve informaçoes na tela
         for text in &self.pendulos {
-            let data1 = text.position.x.to_string();
-            let data2 = text.position.y.to_string();
-            let text_position = format(format_args!("x:{}\ny{}", data1, data2));
+            let data1 = text.entity_id.to_string();
+            let _data2 = text.entity_id.to_string();
+            let text_position = format(format_args!("Id:{}", data1));
             let block = font.layout_text(&text_position, 19f32, TextOptions::new());
             graphics.draw_text(
                 (text.position.x - 30f32, text.position.y + 30f32),
@@ -73,11 +75,6 @@ impl WindowHandler for MyWindowHandler {
             i.draaw(graphics);
             i.update();
         }
-
-        //self.pendulos[0].draaw(graphics);
-        //self.pendulos[1].update();
-        //self.pendulos[0].draaw(graphics);
-        //self.pendulos[1].draaw(graphics);
 
         for i in &mut self.pendulos {}
 
@@ -98,10 +95,12 @@ struct Pendulum {
     r: f32,
     m: f32,
     g: f32,
+
+    entity_id: u8,
 }
 
 impl Pendulum {
-    fn new(x: f32, y: f32, r: f32) -> Pendulum {
+    fn new(x: f32, y: f32, r: f32, entity_id: u8) -> Pendulum {
         Pendulum {
             origim: Vector::new(x, y),
             position: Vector::new(x, y),
@@ -111,6 +110,7 @@ impl Pendulum {
             r,
             m: 0.5,
             g: 0.5,
+            entity_id,
         }
     }
 
