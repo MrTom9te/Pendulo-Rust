@@ -5,7 +5,7 @@ use speedy2d::{
     window::WindowHandler,
     Graphics2D, Window,
 };
-use std::{f32, fmt::format, io::stdin};
+use std::{f32, fmt::format, io::stdin, ptr::swap};
 
 use vector::Vector;
 
@@ -60,9 +60,11 @@ impl WindowHandler for MyWindowHandler {
 
         //Escreve informaçoes na tela
         for text in &self.pendulos {
+            //pega o id de cada pendulo
             let data1 = text.entity_id.to_string();
-            let _data2 = text.entity_id.to_string();
-            let text_position = format(format_args!("Id:{}", data1));
+
+            let _data2 = text.entity_id.to_string(); // ignore isso
+            let text_position = format(format_args!("Id:{}", data1)); //mostra o id da de capendulo
             let block = font.layout_text(&text_position, 19f32, TextOptions::new());
             graphics.draw_text(
                 (text.position.x - 30f32, text.position.y + 30f32),
@@ -71,12 +73,17 @@ impl WindowHandler for MyWindowHandler {
             );
         }
 
-        for i in &mut self.pendulos {
-            i.draaw(graphics);
-            i.update();
-        }
+        //caguei o esquema :<
+        // for i in 0..self.pendulos.len() {
+        //     for j in (i + 1)..self.pendulos.len() {
+        //         self.pendulos[i].on_colision(&mut self.pendulos[j])
+        //     }
+        // }
 
-        for i in &mut self.pendulos {}
+        for pendulo in &mut self.pendulos {
+            pendulo.draaw(graphics);
+            pendulo.update()
+        }
 
         helper.request_redraw();
     }
@@ -113,7 +120,7 @@ impl Pendulum {
             entity_id,
         }
     }
-
+    //Aplica fisica ao pendulo
     fn update(&mut self) {
         self.angular_aceleration += -1f32 * self.angle.sin() * self.g / self.r;
 
@@ -125,6 +132,22 @@ impl Pendulum {
             .set(self.r * self.angle.sin(), self.r * self.angle.cos());
 
         self.position.add(&self.origim);
+    }
+
+    //Checar colisao
+    fn detect_colision(&self, other: &Pendulum) -> bool {
+        let distance = ((self.position.x - other.position.x).powi(2)
+            + (self.position.y - other.position.y).powi(2))
+        .sqrt();
+
+        distance <= (2f32 * 30f32)
+    }
+    //quando a colisao acontecer
+    fn on_colision(&mut self, other: &mut Pendulum /*fudi  porra do codigo*/) {
+        if self.detect_colision(other) {
+            std::mem::swap(&mut self.angular_velocity, &mut other.angular_velocity);
+            // era so da swap trcando os calores
+        }
     }
 
     fn draaw(&self, graphics: &mut Graphics2D) {
